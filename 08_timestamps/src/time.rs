@@ -31,5 +31,9 @@ pub mod interface {
 
         /// Spin for a given duration.
         fn spin_for(&self, duration: Duration);
+
+        /// Spin for a given duration.
+        /// Did not use Boundary scans and prints.
+        fn spin_for_short(&self, duration: Duration);
     }
 }

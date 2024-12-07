@@ -3,10 +3,10 @@
 ## Copyright (c) 2018-2020 Andre Richter <andre.o.richter@gmail.com>
 
 # Default to the RPi3
-BSP ?= rpi3
+BSP ?= rpi4
 
 # Default to a serial device name that is common in Linux.
-DEV_SERIAL ?= /dev/ttyUSB0
+DEV_SERIAL ?= tty.usbserial-143301
 
 # Query the host system's kernel name
 UNAME_S = $(shell uname -s)

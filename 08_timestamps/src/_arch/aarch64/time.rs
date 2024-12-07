@@ -53,14 +53,16 @@ impl time::interface::TimeManager for GenericTimer {
     }
 
     fn spin_for(&self, duration: Duration) {
-        // Instantly return on zero.
-        if duration.as_nanos() == 0 {
+        // Instantly return on zero or smaller function runtime (177us).
+        if duration <= Duration::from_micros(177) {
             return;
         }
 
         // Calculate the register compare value.
         let frq = CNTFRQ_EL0.get() as u64;
-        let x = match frq.checked_mul(duration.as_nanos() as u64) {
+        // Function runtime on RPI4 is 177us.
+        let calibrated_duration = duration - Duration::from_micros(177);
+        let x = match frq.checked_mul((calibrated_duration.as_nanos()) as u64) {
             None => {
                 warn!("Spin duration too long, skipping");
                 return;
@@ -85,6 +87,32 @@ impl time::interface::TimeManager for GenericTimer {
             );
             return;
         }
+
+        // Set the compare value register.
+        CNTP_TVAL_EL0.set(tval as u32);
+
+        // Kick off the counting.                       // Disable timer interrupt.
+        CNTP_CTL_EL0.modify(CNTP_CTL_EL0::ENABLE::SET + CNTP_CTL_EL0::IMASK::SET);
+
+        // ISTATUS will be '1' when cval ticks have passed. Busy-check it.
+        while !CNTP_CTL_EL0.matches_all(CNTP_CTL_EL0::ISTATUS::SET) {}
+
+        // Disable counting again.
+        CNTP_CTL_EL0.modify(CNTP_CTL_EL0::ENABLE::CLEAR);
+    }
+
+    fn spin_for_short(&self, duration: Duration) {
+        // Instantly return on zero or smaller function runtime (177us).
+        if duration <= Duration::from_micros(177) {
+            return;
+        }
+
+        // Calculate the register compare value.
+        let frq = CNTFRQ_EL0.get() as u64;
+        // Function runtime on RPI4 is 177us.
+        let calibrated_duration = duration - Duration::from_micros(177);
+        let x = frq * (calibrated_duration.as_nanos() as u64);
+        let tval = x / NS_PER_S;
 
         // Set the compare value register.
         CNTP_TVAL_EL0.set(tval as u32);

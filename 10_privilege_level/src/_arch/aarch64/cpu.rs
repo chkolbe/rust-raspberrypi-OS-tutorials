@@ -37,8 +37,7 @@ pub unsafe extern "C" fn _start() -> ! {
 /// # Safety
 ///
 /// - The HW state of EL1 must be prepared in a sound way.
-/// - Exception return from EL2 must must continue execution in EL1 with
-///   `runtime_init::runtime_init()`.
+/// - Exception return from EL2 must continue execution in EL1 with `runtime_init::runtime_init()`.
 #[inline(always)]
 unsafe fn el2_to_el1_transition() -> ! {
     use crate::runtime_init;
